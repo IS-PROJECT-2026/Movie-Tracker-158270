@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marquee — Watchlist Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16151A;
+    --card:#1F1E24;
+    --gold:#E8B94A;
+    --velvet:#8C3A46;
+    --paper:#F2EFE9;
+    --muted:#8A8790;
+    --line:#332F35;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Source Sans 3', sans-serif;
+    min-height:100vh;
+  }
+
+  /* Film-strip header */
+  header{
+    background:repeating-linear-gradient(90deg, var(--ink) 0 18px, #0d0c10 18px 22px);
+    border-bottom:6px solid var(--gold);
+    padding:28px 24px 22px;
+    position:relative;
+  }
+  header::before, header::after{
+    content:"";
+    position:absolute;
+    top:0; bottom:0;
+    width:100%;
+    background-image: repeating-linear-gradient(90deg, transparent 0 6px, var(--ink) 6px 10px);
+  }
+  h1{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:clamp(2.2rem, 6vw, 3.6rem);
+    letter-spacing:0.06em;
+    margin:0;
+    text-align:center;
+    color:var(--gold);
+    text-shadow:0 0 18px rgba(232,185,74,0.35);
+  }
+  .tagline{
+    text-align:center;
+    color:var(--muted);
+    margin-top:4px;
+    font-size:0.95rem;
+    letter-spacing:0.03em;
+  }
+
+  main{
+    max-width:900px;
+    margin:0 auto;
+    padding:32px 20px 80px;
+  }
+
+  /* Add form */
+  form{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr auto;
+    gap:10px;
+    background:var(--card);
+    padding:16px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    margin-bottom:28px;
+  }
+  input, select{
+    background:#15141A;
+    border:1px solid var(--line);
+    color:var(--paper);
+    padding:10px 12px;
+    border-radius:6px;
+    font-size:0.95rem;
+    font-family:inherit;
+  }
+  input:focus, select:focus{
+    outline:2px solid var(--gold);
+    outline-offset:1px;
+  }
+  button{
+    cursor:pointer;
+    font-family:'Source Sans 3', sans-serif;
+    font-weight:700;
+  }
+  .btn-add{
+    background:var(--gold);
+    color:var(--ink);
+    border:none;
+    border-radius:6px;
+    padding:10px 18px;
+    letter-spacing:0.02em;
+  }
+  .btn-add:hover{ filter:brightness(1.08); }
+
+  /* Filters */
+  .controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+    align-items:center;
+  }
+  .controls input[type="text"]{ flex:1; min-width:160px; }
+  .status-pills{ display:flex; gap:6px; }
+  .pill{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:0.85rem;
+  }
+  .pill.active{
+    border-color:var(--gold);
+    color:var(--gold);
+    background:rgba(232,185,74,0.08);
+  }
+
+  /* Ticket cards */
+  #list{
+    display:grid;
+    gap:14px;
+  }
+  .ticket{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .ticket::before{
+    content:"";
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:5px;
+    background:var(--velvet);
+  }
+  .ticket.watched::before{ background:var(--gold); }
+  .ticket-title{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:1.4rem;
+    letter-spacing:0.02em;
+    color:var(--paper);
+  }
+  .ticket.watched .ticket-title{ color:var(--muted); text-decoration:line-through; text-decoration-color:var(--gold); }
+  .meta{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-top:4px;
+    font-size:0.82rem;
+    color:var(--muted);
+  }
+  .genre-tag{
+    border:1px solid var(--line);
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .stars{
+    cursor:pointer;
+    font-size:1.1rem;
+    letter-spacing:2px;
+    color:var(--line);
+  }
+  .stars .filled{ color:var(--gold); }
+  .actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .icon-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--paper);
+    border-radius:6px;
+    padding:8px 12px;
+    font-size:0.85rem;
+  }
+  .icon-btn:hover{ border-color:var(--gold); color:var(--gold); }
+  .icon-btn.danger:hover{ border-color:var(--velvet); color:var(--velvet); }
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:60px 20px;
+    border:1px dashed var(--line);
+    border-radius:10px;
+  }
+
+  @media (max-width:640px){
+    form{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Marquee</h1>
+  <p class="tagline">Your watchlist, tonight's showing.</p>
+</header>
+
+<main>
+  <form id="add-form">
+    <input type="text" id="title-input" placeholder="Title" required>
+    <select id="genre-input">
+      <option value="Drama">Drama</option>
+      <option value="Comedy">Comedy</option>
+      <option value="Action">Action</option>
+      <option value="Sci-Fi">Sci-Fi</option>
+      <option value="Horror">Horror</option>
+      <option value="Documentary">Documentary</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="type-input">
+      <option value="Movie">Movie</option>
+      <option value="Show">Show</option>
+    </select>
+    <button type="submit" class="btn-add">Add to list</button>
+  </form>
+
+  <div class="controls">
+    <input type="text" id="search-input" placeholder="Search your list…">
+    <div class="status-pills">
+      <button class="pill active" data-status="all">All</button>
+      <button class="pill" data-status="unwatched">To Watch</button>
+      <button class="pill" data-status="watched">Watched</button>
+    </div>
+  </div>
+
+  <div id="list"></div>
+</main>
+
+<script>
+  const STORAGE_KEY = "marquee-watchlist";
+  let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  let statusFilter = "all";
+  let searchTerm = "";
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function render() {
+    const list = document.getElementById("list");
+    const filtered = items.filter(item => {
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "watched" && item.watched) ||
+        (statusFilter === "unwatched" && !item.watched);
+      const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="empty">Nothing here yet. Add a title above to start your list.</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(item => `
+      <div class="ticket ${item.watched ? "watched" : ""}" data-id="${item.id}">
+        <div>
+          <div class="ticket-title">${escapeHtml(item.title)}</div>
+          <div class="meta">
+            <span class="genre-tag">${item.type}</span>
+            <span class="genre-tag">${item.genre}</span>
+            <span class="stars" data-action="rate">${renderStars(item.rating)}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" data-action="toggle">${item.watched ? "Mark unwatched" : "Mark watched"}</button>
+          <button class="icon-btn danger" data-action="delete">Remove</button>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderStars(rating) {
+    let out = "";
+    for (let i = 1; i <= 5; i++) {
+      out += `<span data-star="${i}" class="${i <= rating ? "filled" : ""}">★</span>`;
+    }
+    return out;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById("add-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = document.getElementById("title-input").value.trim();
+    if (!title) return;
+    items.unshift({
+      id: Date.now().toString(),
+      title,
+      genre: document.getElementById("genre-input").value,
+      type: document.getElementById("type-input").value,
+      watched: false,
+      rating: 0
+    });
+    document.getElementById("title-input").value = "";
+    save();
+    render();
+  });
+
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    searchTerm = e.target.value;
+    render();
+  });
+
+  document.querySelectorAll(".pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      statusFilter = pill.dataset.status;
+      render();
+    });
+  });
+
+  document.getElementById("list").addEventListener("click", (e) => {
+    const ticket = e.target.closest(".ticket");
+    if (!ticket) return;
+    const id = ticket.dataset.id;
+    const item = items.find(i => i.id === id);
+
+    if (e.target.dataset.action === "toggle") {
+      item.watched = !item.watched;
+    } else if (e.target.dataset.action === "delete") {
+      items = items.filter(i => i.id !== id);
+    } else if (e.target.dataset.star) {
+      item.rating = parseInt(e.target.dataset.star, 10) === item.rating ? 0 : parseInt(e.target.dataset.star, 10);
+    } else {
+      return;
+    }
+    save();
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
